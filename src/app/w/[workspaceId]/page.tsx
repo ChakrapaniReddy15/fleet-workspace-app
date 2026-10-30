@@ -202,8 +202,25 @@ async function WorkspaceContent({
           {role === "owner" && (
             <section className="panel">
               <p className="eyebrow">TEAM ACCESS</p>
+              <h2>Manage access</h2>
+              <p className="muted">
+                Invite people to {workspace.name} and review their access.
+              </p>
+              <details className="invite-disclosure">
+                <summary>
+                  <span aria-hidden="true">＋</span>
+                  Invite a member
+                </summary>
+                <div className="invite-content">
+                  <p className="muted">
+                    Add an existing account as an editor or viewer.
+                  </p>
+                  <InviteForm workspaceId={workspace.id} />
+                </div>
+              </details>
+              <div className="invite-divider" />
               <div className="member-heading">
-                <h2>Members</h2>
+                <h3>Members</h3>
                 {!workspaceMembersError && workspaceMembers && (
                   <span className="member-count">
                     {workspaceMembers.length}
@@ -211,7 +228,7 @@ async function WorkspaceContent({
                 )}
               </div>
               <p className="muted">
-                People with access to {workspace.name}
+                People with access to this workspace.
               </p>
               {workspaceMembersError ? (
                 <p className="form-feedback error" role="alert">
@@ -249,13 +266,6 @@ async function WorkspaceContent({
               ) : (
                 <p className="member-empty">No members found for this workspace.</p>
               )}
-              <div className="invite-divider" />
-              <h3 className="invite-heading">Invite a member</h3>
-              <p className="muted">
-                Add an existing demo account to this fleet as an editor or
-                viewer.
-              </p>
-              <InviteForm workspaceId={workspace.id} />
             </section>
           )}
           <section className="security-note">
