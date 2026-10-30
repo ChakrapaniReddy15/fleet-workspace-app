@@ -95,19 +95,39 @@ JWTs, never through a service-role key.
 
 ## Assessment demo and recording
 
-Suggested 5–8 minute walkthrough:
+Use QuickTime Player's **File → New Screen Recording** on macOS, enable the
+microphone, and narrate this roughly seven-minute walkthrough. Keep the app
+running at `http://localhost:3000` with local Supabase started and seeded.
 
-1. Sign in as each role and switch between fleet companies.
-2. Add/edit a vehicle and its notes; show the viewer's read-only interface.
-3. Change the workspace ID in the URL and the workspace ID in a request body.
-   Both must fail with no indication whether the other workspace exists.
-4. Make a direct authenticated Supabase/PostgREST request as
-   `owner@fleet.test` for a Charminar vehicle; RLS returns no rows.
-5. Summarize the seeded Tata Ace. The mock emits malformed output once, retries,
-   then returns a validated summary that still reports the brake issue.
+1. **0:00–0:45 — Sign in and explain the mapping.** Show the Deccan Logistics
+   workspace and explain that fleet companies are workspaces, vehicles are
+   projects, and vehicle notes are notes.
+2. **0:45–1:45 — Roles and workspace switching.** Sign in as
+   `editor@fleet.test`, switch between both workspaces, then sign in as
+   `viewer@fleet.test` and point out that write controls are hidden.
+3. **1:45–2:45 — Vehicle and note edits.** As an editor, add or edit a vehicle
+   and a note, then show the updated result.
+4. **2:45–4:00 — Forged identifiers.** Change the workspace ID in a URL and
+   submit a request with another workspace ID in its body. Both must fail with
+   the same generic unavailable/access-denied behavior.
+5. **4:00–5:00 — Database isolation.** Run `npm test` and show the
+   authenticated PostgREST tests asserting that cross-workspace reads,
+   updates, deletes, and forged writes are denied by RLS.
+6. **5:00–6:30 — Summary safety.** Open the seeded Tata Ace with the brake-noise
+   note containing “ignore previous instructions,” summarize it, and show that
+   the mock retries its malformed response and the validated result still
+   flags the brake concern.
+7. **6:30–7:00 — Close.** Briefly show the migration, restrictive RLS, and
+   README trade-offs and next steps.
 
-**Screen recording:** add the shareable 5–8 minute recording link here before
-submission.
+**Screen recording:** not recorded yet. After recording, upload the video,
+ensure the link is viewable by the assessors, and replace this line with the
+shareable 5–8 minute URL.
+
+**AI session history:** the files in [`ai-log/`](./ai-log/) are redacted,
+truncated context exports, not the complete unedited chat/agent/IDE transcripts
+required by the brief. Add the original transcripts if they are available;
+do not treat these exports as a substitute.
 
 **Public repository:** [github.com/ChakrapaniReddy15/fleet-workspace-app](https://github.com/ChakrapaniReddy15/fleet-workspace-app)
 
