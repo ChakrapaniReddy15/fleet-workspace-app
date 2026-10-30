@@ -114,6 +114,16 @@ export type Database = {
         };
         Returns: boolean;
       };
+      list_workspace_members: {
+        Args: {
+          p_workspace_id: string;
+        };
+        Returns: {
+          user_id: string;
+          display_name: string;
+          role: Database["public"]["Enums"]["membership_role"];
+        }[];
+      };
     };
     Enums: {
       membership_role: "owner" | "editor" | "viewer";

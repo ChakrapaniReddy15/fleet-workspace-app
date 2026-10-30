@@ -7,6 +7,7 @@ submission preparation:
   messages visible in a recovered session view. It explicitly records that
   hidden tool logs and unavailable conversation history are missing; it is
   partial, not a complete unedited transcript.
+- `member-roster-feature.md` is an implementation note, not a transcript.
 - `previous-session.json` and `restart-and-build-session.json` are Copilot
   context exports, not byte-for-byte IDE transcripts. The export reports
   truncation, and does not include raw tool output. Local identifiers and

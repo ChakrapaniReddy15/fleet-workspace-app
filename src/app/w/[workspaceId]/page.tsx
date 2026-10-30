@@ -79,6 +79,12 @@ async function WorkspaceContent({
 
   const role = membership.role;
   const canEdit = role === "owner" || role === "editor";
+  const { data: workspaceMembers, error: workspaceMembersError } =
+    role === "owner"
+      ? await supabase.rpc("list_workspace_members", {
+          p_workspace_id: workspace.id,
+        })
+      : { data: null, error: null };
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -196,7 +202,33 @@ async function WorkspaceContent({
           {role === "owner" && (
             <section className="panel">
               <p className="eyebrow">TEAM ACCESS</p>
-              <h2>Invite a member</h2>
+              <h2>Workspace members</h2>
+              <p className="muted">
+                Members and roles for {workspace.name} only.
+              </p>
+              {workspaceMembersError ? (
+                <p className="form-feedback error" role="alert">
+                  Workspace members could not be loaded.
+                </p>
+              ) : workspaceMembers?.length ? (
+                <ul className="member-list">
+                  {workspaceMembers.map((member) => (
+                    <li className="member-row" key={member.user_id}>
+                      <span>
+                        <strong>
+                          {member.display_name.trim() || "Workspace member"}
+                        </strong>
+                      </span>
+                      <span className={`user-role member-role ${member.role}`}>
+                        {member.role}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">No workspace members found.</p>
+              )}
+              <h3 className="invite-heading">Invite a member</h3>
               <p className="muted">
                 Add an existing demo account to this fleet as an editor or
                 viewer.

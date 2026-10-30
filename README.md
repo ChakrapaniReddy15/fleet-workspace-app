@@ -83,6 +83,10 @@ JWTs, never through a service-role key.
   email using a narrowly scoped `SECURITY DEFINER` function that checks the
   caller's owner role and has a fixed `search_path`. Sending email invitations
   would require a separate token and email-delivery flow.
+- **Member roster is tenant-scoped.** Owners see names and roles only for the
+  selected workspace through an owner-checked RPC. The public profile table
+  remains self-only; workspace switching shows each shared user’s role for
+  that workspace without exposing email addresses.
 - **Summaries are untrusted until validated.** The provider interface returns
   `unknown`; Zod validates the result before storage. A malformed response is
   retried once, and invalid output is never persisted. The mock provider

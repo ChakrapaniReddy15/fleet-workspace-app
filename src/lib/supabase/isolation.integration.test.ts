@@ -169,6 +169,61 @@ describe("workspace isolation against local PostgREST", () => {
     );
   });
 
+  it("lists workspace members only for owners and only within that workspace", async () => {
+    const workspaceAMembers = await ownerA.rpc("list_workspace_members", {
+      p_workspace_id: workspaceA,
+    });
+    expect(workspaceAMembers.error).toBeNull();
+    expect(workspaceAMembers.data).toEqual(
+      expect.arrayContaining([
+        {
+          user_id: "10000000-0000-4000-8000-000000000001",
+          display_name: "Fleet Owner",
+          role: "owner",
+        },
+        {
+          user_id: "10000000-0000-4000-8000-000000000002",
+          display_name: "Fleet Editor",
+          role: "editor",
+        },
+      ]),
+    );
+    expect(workspaceAMembers.data).toHaveLength(3);
+
+    const workspaceBMembers = await ownerB.rpc("list_workspace_members", {
+      p_workspace_id: workspaceB,
+    });
+    expect(workspaceBMembers.error).toBeNull();
+    expect(workspaceBMembers.data).toEqual(
+      expect.arrayContaining([
+        {
+          user_id: "10000000-0000-4000-8000-000000000002",
+          display_name: "Fleet Editor",
+          role: "owner",
+        },
+        {
+          user_id: "10000000-0000-4000-8000-000000000003",
+          display_name: "Fleet Viewer",
+          role: "editor",
+        },
+      ]),
+    );
+    expect(workspaceBMembers.data).toHaveLength(2);
+
+    const viewerMembers = await viewerA.rpc("list_workspace_members", {
+      p_workspace_id: workspaceA,
+    });
+    expect(viewerMembers.error).toBeNull();
+    expect(viewerMembers.data).toEqual([]);
+
+    const crossWorkspaceMembers = await ownerA.rpc(
+      "list_workspace_members",
+      { p_workspace_id: workspaceB },
+    );
+    expect(crossWorkspaceMembers.error).toBeNull();
+    expect(crossWorkspaceMembers.data).toEqual([]);
+  });
+
   it("enables and forces row-level security on every tenant table", async () => {
     const connectionString = process.env.SUPABASE_DB_URL;
     if (!connectionString) {
