@@ -24,6 +24,11 @@ export async function createValidatedSummary(
     if (result.success) {
       return result.data;
     }
+    // Log only which fields failed, never the model output or note text.
+    console.warn(
+      `Summary attempt ${attempt + 1} failed schema validation:`,
+      result.error.issues.map((issue) => issue.path.join(".") || "(root)"),
+    );
   }
 
   throw new InvalidSummaryError();

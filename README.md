@@ -149,7 +149,10 @@ running at `http://localhost:3000` with local Supabase started and seeded.
 6. **5:00–6:30 — Summary safety.** Open the seeded Tata Ace with the brake-noise
    note containing “ignore previous instructions,” summarize it, and show that
    the mock retries its malformed response and the validated result still
-   flags the brake concern.
+   flags the brake concern. Keep the `npm run dev` terminal visible: the first
+   summarize after the server starts logs `Summary attempt 1 failed schema
+   validation: [...]` (field names only), then the valid summary is saved. Restart
+   `npm run dev` to repeat the malformed reply.
 7. **6:30–7:00 — Close.** Briefly show the migration, restrictive RLS, and
    README trade-offs and next steps.
 
@@ -157,11 +160,13 @@ running at `http://localhost:3000` with local Supabase started and seeded.
 ensure the link is viewable by the assessors, and replace this line with the
 shareable 5–8 minute URL.
 
-**AI session history:** [`ai-log/`](./ai-log/) contains the available
-redacted/truncated Copilot context exports and a partial conversation record
-saved from the session view. It is not a complete, unedited archive of every
-chat, agent, and IDE interaction required by the brief. The available history
-is included transparently; missing content has not been reconstructed.
+**AI session history:** [`ai-log/`](./ai-log/) contains the raw Claude Code
+session file for the review and hardening pass (unedited apart from one
+documented email redaction), plus the earlier Copilot context exports and a
+partial conversation record from the session view. The earlier material is
+truncated by the tools that exported it, so the folder is not a complete archive
+of every interaction; [`ai-log/README.md`](./ai-log/README.md) lists what each
+file is and what is missing. Missing content has not been reconstructed.
 
 **Public repository:** [github.com/ChakrapaniReddy15/fleet-workspace-app](https://github.com/ChakrapaniReddy15/fleet-workspace-app)
 
