@@ -1,11 +1,16 @@
-# AI session exports
+# AI session history
 
-These JSON files preserve the session records available from Copilot's session
-context export. Local home-directory identifiers, the repository owner's
-GitHub handle in transcript text, and local Supabase credential values are
-replaced with `[REDACTED]` markers before inclusion.
+This folder contains the AI-session material that was available during
+submission preparation:
 
-The Copilot context export is not a byte-for-byte IDE transcript and reports
-the earlier planning session as truncated. Raw tool execution output is not
-included in the export API response. These limitations are recorded rather
-than presenting the files as unedited, complete raw transcripts.
+- `multi-tenant-app-development-assessment.md` contains user and assistant
+  messages visible in a recovered session view. It explicitly records that
+  hidden tool logs and unavailable conversation history are missing; it is
+  partial, not a complete unedited transcript.
+- `previous-session.json` and `restart-and-build-session.json` are Copilot
+  context exports, not byte-for-byte IDE transcripts. The export reports
+  truncation, and does not include raw tool output. Local identifiers and
+  credential-like values were redacted before inclusion.
+
+These files are provided transparently as available history. Missing content
+has not been recreated or presented as a complete transcript.

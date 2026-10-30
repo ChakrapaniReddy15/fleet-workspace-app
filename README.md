@@ -124,10 +124,11 @@ running at `http://localhost:3000` with local Supabase started and seeded.
 ensure the link is viewable by the assessors, and replace this line with the
 shareable 5–8 minute URL.
 
-**AI session history:** the files in [`ai-log/`](./ai-log/) are redacted,
-truncated context exports, not the complete unedited chat/agent/IDE transcripts
-required by the brief. Add the original transcripts if they are available;
-do not treat these exports as a substitute.
+**AI session history:** [`ai-log/`](./ai-log/) contains the available
+redacted/truncated Copilot context exports and a partial conversation record
+saved from the session view. It is not a complete, unedited archive of every
+chat, agent, and IDE interaction required by the brief. The available history
+is included transparently; missing content has not been reconstructed.
 
 **Public repository:** [github.com/ChakrapaniReddy15/fleet-workspace-app](https://github.com/ChakrapaniReddy15/fleet-workspace-app)
 
