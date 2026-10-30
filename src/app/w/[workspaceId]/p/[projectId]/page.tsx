@@ -83,6 +83,7 @@ async function ProjectContent({
         .from("workspaces")
         .select("id, name")
         .in("id", workspaceIds)
+        .order("name")
     : { data: [], error: null };
   const switcherError = Boolean(membershipsError || workspacesError);
   const role = membership.role;
