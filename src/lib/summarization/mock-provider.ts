@@ -1,10 +1,11 @@
+import type { SummaryPrompt } from "./prompt";
 import type { SummaryProvider } from "./provider";
 import type { ProjectSummary } from "./schema";
 
 export class MockSummaryProvider implements SummaryProvider {
   private calls = 0;
 
-  async summarize(notes: readonly string[]): Promise<unknown> {
+  async summarize({ notes }: SummaryPrompt): Promise<unknown> {
     this.calls += 1;
 
     if (this.calls === 1) {

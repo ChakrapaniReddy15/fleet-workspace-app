@@ -224,6 +224,94 @@ describe("workspace isolation against local PostgREST", () => {
     expect(crossWorkspaceMembers.data).toEqual([]);
   });
 
+  it("gives identical direct-database responses for another workspace and a missing one", async () => {
+    const missing = "99999999-9999-4999-8999-999999999999";
+    const shape = (result: { data: unknown; error: { code: string; message: string } | null }) => ({
+      data: result.data,
+      code: result.error?.code ?? null,
+      message: result.error?.message ?? null,
+    });
+
+    for (const table of ["workspaces", "projects", "notes", "project_summaries"] as const) {
+      const column = table === "workspaces" ? "id" : "workspace_id";
+      const other = await ownerA.from(table).select("*").eq(column, workspaceB);
+      const absent = await ownerA.from(table).select("*").eq(column, missing);
+      expect(shape(other)).toEqual({ data: [], code: null, message: null });
+      expect(shape(absent)).toEqual(shape(other));
+    }
+
+    const forgedOther = await ownerA
+      .from("projects")
+      .insert({ workspace_id: workspaceB, name: "Forged", registration: "FAKE 002" });
+    const forgedAbsent = await ownerA
+      .from("projects")
+      .insert({ workspace_id: missing, name: "Forged", registration: "FAKE 002" });
+    expect(forgedOther.error?.code).toBe("42501");
+    expect(shape(forgedAbsent)).toEqual(shape(forgedOther));
+
+    const inviteOther = await ownerA.rpc("invite_workspace_member", {
+      p_workspace_id: workspaceB,
+      p_email: "owner@fleet.test",
+      p_role: "editor",
+    });
+    const inviteAbsent = await ownerA.rpc("invite_workspace_member", {
+      p_workspace_id: missing,
+      p_email: "owner@fleet.test",
+      p_role: "editor",
+    });
+    expect(inviteOther.error?.code).toBe("42501");
+    expect(shape(inviteAbsent)).toEqual(shape(inviteOther));
+  });
+
+  it("denies viewer edits, direct membership writes, and anonymous access", async () => {
+    const viewerUpdate = await viewerA
+      .from("projects")
+      .update({ name: "Viewer edit" })
+      .eq("id", projectA)
+      .select("id");
+    expect(viewerUpdate.data ?? []).toEqual([]);
+
+    const viewerDelete = await viewerA
+      .from("notes")
+      .delete()
+      .eq("workspace_id", workspaceA)
+      .select("id");
+    expect(viewerDelete.data ?? []).toEqual([]);
+
+    // Owners invite through the checked RPC only; a direct insert could grant
+    // the owner role.
+    const directMembership = await ownerA.from("memberships").insert({
+      workspace_id: workspaceA,
+      user_id: "10000000-0000-4000-8000-000000000003",
+      role: "owner",
+    });
+    expect(directMembership.error).not.toBeNull();
+
+    // Re-inviting an owner must not demote them.
+    const demoteOwner = await ownerA.rpc("invite_workspace_member", {
+      p_workspace_id: workspaceA,
+      p_email: "owner@fleet.test",
+      p_role: "viewer",
+    });
+    expect(demoteOwner.error).toBeNull();
+    const ownerRole = await ownerA
+      .from("memberships")
+      .select("role")
+      .eq("workspace_id", workspaceA)
+      .eq("user_id", "10000000-0000-4000-8000-000000000001")
+      .single();
+    expect(ownerRole.data?.role).toBe("owner");
+
+    const anonymous = createTestClient();
+    for (const table of ["workspaces", "projects", "notes", "memberships"] as const) {
+      const result = await anonymous.from(table).select("*");
+      expect(result.data ?? []).toEqual([]);
+    }
+
+    const stillThere = await ownerA.from("projects").select("name").eq("id", projectA).single();
+    expect(stillThere.data?.name).toBe("Tata Ace");
+  });
+
   it("enables and forces row-level security on every tenant table", async () => {
     const connectionString = process.env.SUPABASE_DB_URL;
     if (!connectionString) {

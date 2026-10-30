@@ -3,7 +3,9 @@
 A small multi-tenant fleet management app built with Next.js App Router,
 TypeScript, Supabase Auth, and PostgreSQL. **Fleet companies are workspaces,
 vehicles are projects, and vehicle notes are notes.** The database keeps the
-assessment's required entity names.
+assessment's required entity names. The **users** table is Supabase's
+`auth.users` (credentials, managed by Supabase Auth) plus `public.profiles`
+(one row per user, created by trigger), which the tenant tables reference.
 
 ## Run locally
 
@@ -45,13 +47,14 @@ Start and seed Supabase as above, then run:
 npm test
 ```
 
-The suite includes real authenticated requests to local PostgREST. It verifies
-that a Deccan-only owner gets empty results when reading, updating, or deleting
-Charminar projects and notes; forged workspace IDs are rejected; a viewer
-cannot write; the shared user has distinct workspace roles; and every public
-tenant table has both `ENABLE ROW LEVEL SECURITY` and `FORCE ROW LEVEL
-SECURITY`. Summary tests cover malformed output and prompt-injection-style note
-content.
+| File | What it proves |
+|---|---|
+| `src/app/tenant-boundary.integration.test.ts` | Edge case 1 at the **URL** and **request body** layers. It runs the real proxy and server actions with a signed-in Deccan-only owner. Another workspace's or vehicle's URL is rewritten to the same 404 page as a random UUID. Every create/update/delete/summarize/invite with another tenant's IDs returns the same `Not found or access denied.` as a missing ID, and Charminar data is unchanged afterwards. Viewers cannot write and editors cannot invite. |
+| `src/lib/supabase/isolation.integration.test.ts` | Edge case 1 at the **direct database** layer, using user A's JWT against PostgREST. Reads, updates, and deletes of workspace B return empty results. Responses for workspace B and a nonexistent workspace are identical (both `[]` for reads, both `42501` for writes and invites). Viewers cannot edit, owners cannot insert memberships directly or demote an owner, and anonymous clients see nothing. Every tenant table has `ENABLE` and `FORCE ROW LEVEL SECURITY`, plus the expected restrictive policies. |
+| `src/lib/summarization/validated-summary.test.ts` | Edge case 2. Malformed output is retried once and then succeeds. Malformed output twice throws, so nothing is stored. The "ignore previous instructions" note still yields a brake warning. A provider that obeys the injection with free text is rejected, and extra fields are stripped. Notes cannot break out of their `<untrusted_note>` delimiters, and input size is capped. |
+
+The integration tests need local Supabase running and seeded. They leave the
+seed data unchanged, so they can be re-run.
 
 The test database connection is obtained by `npm run db:env`; the test suite
 uses that local database URL only to inspect `pg_catalog` security flags.
@@ -79,6 +82,10 @@ JWTs, never through a service-role key.
 - **No existence leaks.** Missing and inaccessible workspaces/projects share a
   not-found page. Mutations use the same “Not found or access denied” message;
   zero-row updates and deletes are not treated as success.
+- **Membership writes go through one checked function.** `authenticated` has
+  no `INSERT` privilege on `memberships`; owners invite only through
+  `invite_workspace_member`, which can grant editor or viewer but never owner,
+  and never demotes an existing owner.
 - **Invites target existing accounts.** Owners can add a registered account by
   email using a narrowly scoped `SECURITY DEFINER` function that checks the
   caller's owner role and has a fixed `search_path`. Sending email invitations
@@ -87,6 +94,10 @@ JWTs, never through a service-role key.
   selected workspace through an owner-checked RPC. The public profile table
   remains self-only; workspace switching shows each shared user’s role for
   that workspace without exposing email addresses.
+- **Note text is untrusted input.** `buildSummaryPrompt` keeps the app's
+  instructions in a separate system prompt and wraps each note in a labelled
+  `<untrusted_note>` element. Angle brackets are escaped so a note cannot close
+  its delimiter, and note count, note length, and total size are capped.
 - **Summaries are untrusted until validated.** The provider interface returns
   `unknown`; Zod validates the result before storage. A malformed response is
   retried once, and invalid output is never persisted. The mock provider
@@ -111,9 +122,27 @@ running at `http://localhost:3000` with local Supabase started and seeded.
    `viewer@fleet.test` and point out that write controls are hidden.
 3. **1:45–2:45 — Vehicle and note edits.** As an editor, add or edit a vehicle
    and a note, then show the updated result.
-4. **2:45–4:00 — Forged identifiers.** Change the workspace ID in a URL and
-   submit a request with another workspace ID in its body. Both must fail with
-   the same generic unavailable/access-denied behavior.
+4. **2:45–4:00 — Forged identifiers.** Signed in as `owner@fleet.test`:
+   - **URL:** open `/w/20000000-0000-4000-8000-000000000002` (Charminar, which
+     exists) and `/w/99999999-9999-4999-8999-999999999999` (which does not).
+     Both show the same 404 page.
+   - **Body:** in DevTools, change the hidden `workspaceId` input on the
+     "Add vehicle" form to Charminar's ID and submit. The result is the same
+     "Not found or access denied." as with a made-up ID.
+   - **Direct database call:** copy the access token (or use the curl below)
+     and query PostgREST directly. Charminar and a missing workspace both
+     return `[]`.
+
+   ```bash
+   source .env.local
+   TOKEN=$(curl -s "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/token?grant_type=password" \
+     -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
+     -d '{"email":"owner@fleet.test","password":"FleetDemo2026!"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).access_token')
+   for ws in 20000000-0000-4000-8000-000000000002 99999999-9999-4999-8999-999999999999; do
+     curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/projects?workspace_id=eq.$ws" \
+       -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" -H "Authorization: Bearer $TOKEN"; echo
+   done
+   ```
 5. **4:00–5:00 — Database isolation.** Run `npm test` and show the
    authenticated PostgREST tests asserting that cross-workspace reads,
    updates, deletes, and forged writes are denied by RLS.
@@ -142,5 +171,9 @@ Add notes created automatically from dashcam events or number-plate
 recognition.
 
 Other production follow-ups: real email invitations with expiring tokens,
-audit logging, rate limits, a real LLM provider with explicit prompt-injection
-handling, CI against disposable Supabase, and ownership-transfer rules.
+audit logging, rate limits, a real LLM provider behind the same
+`SummaryProvider` interface (the prompt builder is already in place), CI
+against disposable Supabase, pgTAP policy tests, and ownership rules: transfer,
+and blocking removal of a workspace's last owner. That last one needs a
+`SECURITY DEFINER` check, because a policy on `memberships` cannot query
+`memberships` without recursing.

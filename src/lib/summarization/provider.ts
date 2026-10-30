@@ -1,3 +1,6 @@
+import type { SummaryPrompt } from "./prompt";
+
 export interface SummaryProvider {
-  summarize(notes: readonly string[]): Promise<unknown>;
+  /** Returns raw model output; callers must validate it before use. */
+  summarize(prompt: SummaryPrompt): Promise<unknown>;
 }
