@@ -202,9 +202,16 @@ async function WorkspaceContent({
           {role === "owner" && (
             <section className="panel">
               <p className="eyebrow">TEAM ACCESS</p>
-              <h2>Workspace members</h2>
+              <div className="member-heading">
+                <h2>Members</h2>
+                {!workspaceMembersError && workspaceMembers && (
+                  <span className="member-count">
+                    {workspaceMembers.length}
+                  </span>
+                )}
+              </div>
               <p className="muted">
-                Members and roles for {workspace.name} only.
+                People with access to {workspace.name}
               </p>
               {workspaceMembersError ? (
                 <p className="form-feedback error" role="alert">
@@ -212,22 +219,37 @@ async function WorkspaceContent({
                 </p>
               ) : workspaceMembers?.length ? (
                 <ul className="member-list">
-                  {workspaceMembers.map((member) => (
-                    <li className="member-row" key={member.user_id}>
-                      <span>
-                        <strong>
-                          {member.display_name.trim() || "Workspace member"}
-                        </strong>
-                      </span>
-                      <span className={`user-role member-role ${member.role}`}>
-                        {member.role}
-                      </span>
-                    </li>
-                  ))}
+                  {workspaceMembers.map((member) => {
+                    const displayName =
+                      member.display_name.trim() || "Workspace member";
+                    const initials = displayName
+                      .split(/\s+/)
+                      .slice(0, 2)
+                      .map((part) => part[0])
+                      .join("")
+                      .toUpperCase();
+                    return (
+                      <li className="member-row" key={member.user_id}>
+                        <span className="member-avatar" aria-hidden="true">
+                          {initials}
+                        </span>
+                        <span className="member-identity">
+                          <strong>{displayName}</strong>
+                          {member.user_id === user.id && (
+                            <small className="member-self">You</small>
+                          )}
+                        </span>
+                        <span className={`user-role member-role ${member.role}`}>
+                          {member.role}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
-                <p className="muted">No workspace members found.</p>
+                <p className="member-empty">No members found for this workspace.</p>
               )}
+              <div className="invite-divider" />
               <h3 className="invite-heading">Invite a member</h3>
               <p className="muted">
                 Add an existing demo account to this fleet as an editor or
