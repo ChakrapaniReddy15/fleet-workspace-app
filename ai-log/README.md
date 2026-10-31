@@ -4,14 +4,17 @@ This folder contains the AI-session material that was available during
 submission preparation:
 
 - `claude-code-review-and-hardening-session.jsonl` is the raw Claude Code
-  session file (one JSON event per line) for the review that added the
-  URL/body/database edge-case tests, the prompt builder, and the membership
-  hardening migration. It is copied from `~/.claude/projects/` with exactly one
-  change: every occurrence of the author's personal email address, including
-  regex-escaped forms in search commands, was replaced with `[redacted-email]`.
-  The address was injected automatically by the desktop app as session context
-  and was never typed in the conversation. Nothing else was added, removed, or
-  reordered. The copy ends where it was taken, partway through that session.
+  session file (one JSON event per line) for the final review and polish. It
+  covers the requirement review, the URL/body/database edge-case tests, the
+  prompt builder, the membership hardening migration, fixing `npm run dev`,
+  and producing the demo video (script, voiceover checks, and sync checks).
+  It is copied from `~/.claude/projects/` with exactly one kind of change:
+  every occurrence of the author's personal email address, including
+  regex-escaped forms and fragments in search commands, was replaced with
+  `[redacted-email]` or `[redacted]`. The address was injected automatically
+  by the desktop app as session context and was never typed in the
+  conversation. Nothing else was added, removed, or reordered. The copy was
+  taken at the end of the session, so only the final commit step is missing.
 - `multi-tenant-app-development-assessment.md` contains user and assistant
   messages visible in a recovered session view. It explicitly records that
   hidden tool logs and unavailable conversation history are missing; it is
