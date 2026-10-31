@@ -7,6 +7,8 @@ assessment's required entity names. The **users** table is Supabase's
 `auth.users` (credentials, managed by Supabase Auth) plus `public.profiles`
 (one row per user, created by trigger), which the tenant tables reference.
 
+**Demo video:** [Watch on Google Drive](https://drive.google.com/file/d/1D1V1pxYhmZb0xVUQ-07HBn1SGacTahf-/view?usp=sharing) (about 6 minutes)
+
 ## Run locally
 
 Requirements: Node.js 20+, npm, and Docker Desktop.
@@ -156,9 +158,8 @@ running at `http://localhost:3000` with local Supabase started and seeded.
 7. **6:30–7:00 — Close.** Briefly show the migration, restrictive RLS, and
    README trade-offs and next steps.
 
-**Screen recording:** not recorded yet. After recording, upload the video,
-ensure the link is viewable by the assessors, and replace this line with the
-shareable 5–8 minute URL.
+**Screen recording:** [Watch the demo on Google Drive](https://drive.google.com/file/d/1D1V1pxYhmZb0xVUQ-07HBn1SGacTahf-/view?usp=sharing) (about 6
+minutes). It shows the app working and both edge cases.
 
 **AI session history:** [`ai-log/`](./ai-log/) contains the raw Claude Code
 session file for the review and hardening pass (unedited apart from one
